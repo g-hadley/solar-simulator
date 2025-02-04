@@ -171,7 +171,7 @@
                 for (let i = 0; i < 2; i++) {
                     particles.push(new Particle(comet.x, comet.y, comet.vx, comet.vy, comet.orbitRadius));
                 }
-                // Update particles and remove faded ones.
+                
                 for (let i = particles.length - 1; i >= 0; i--) {
                     particles[i].update();
                     if (particles[i].life <= 0) particles.splice(i, 1);
