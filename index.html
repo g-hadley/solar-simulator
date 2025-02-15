@@ -3,7 +3,7 @@
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Solar Comet Simulator</title>
+        <title>Solar Comet Game</title>
         <style>
             html,
             body {
@@ -11,221 +11,24 @@
                 padding: 0;
                 height: 100%;
                 width: 100%;
-                font-family: Arial, sans-serif;
                 background: #000;
                 color: #fff;
+                font-family: Arial, sans-serif;
             }
             #canvas {
                 position: absolute;
                 top: 0;
                 left: 0;
             }
-            #gui {
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                background: rgba(0, 0, 0, 0.85);
-                padding: 10px 15px;
-                box-sizing: border-box;
-                display: flex;
-                flex-wrap: wrap;
-                align-items: center;
-                justify-content: center;
-                z-index: 100;
-            }
-            #gui h1 {
-                flex: 1 100%;
-                text-align: center;
-                font-size: 1.5em;
-                margin: 5px 0;
-            }
-            .control-group {
-                margin: 5px 15px;
-                display: flex;
-                align-items: center;
-            }
-            .control-group label {
-                margin-right: 8px;
-                font-size: 1em;
-            }
-            .control-group input[type="range"] {
-                -webkit-appearance: none;
-                width: 150px;
-                height: 5px;
-                background: #444;
-                border-radius: 5px;
-                outline: none;
-            }
-            .control-group input[type="range"]::-webkit-slider-thumb {
-                -webkit-appearance: none;
-                width: 15px;
-                height: 15px;
-                border-radius: 50%;
-                background: #fff;
-                cursor: pointer;
-                border: none;
-            }
-            .control-group input[type="range"]::-moz-range-thumb {
-                width: 15px;
-                height: 15px;
-                border-radius: 50%;
-                background: #fff;
-                cursor: pointer;
-                border: none;
-            }
         </style>
     </head>
     <body>
-        <div id="gui">
-            <h1>Solar Comet Simulator</h1>
-            <div class="control-group">
-                <label for="speedSlider">Comet Speed:</label>
-                <input type="range" id="speedSlider" min="0.001" max="0.05" step="0.001" value="0.01" />
-            </div>
-            <div class="control-group">
-                <label for="distanceSlider">Comet Distance:</label>
-                <input type="range" id="distanceSlider" min="100" max="500" step="1" value="300" />
-            </div>
-        </div>
         <canvas id="canvas"></canvas>
-        <script>
-            const canvas = document.getElementById("canvas"),
-                ctx = canvas.getContext("2d");
-
-            const sun = { x: 0, y: 0, radius: 80 };
-            function resize() {
-                canvas.width = window.innerWidth;
-                canvas.height = window.innerHeight;
-                sun.x = canvas.width / 2;
-                sun.y = canvas.height / 2;
-            }
-            window.addEventListener("resize", resize);
-            resize();
-
-            const minOrbit = 100,
-                maxOrbit = 500,
-                boostMax = 1;
-
-            const comet = {
-                orbitRadius: 300,
-                angle: 0,
-                speed: 0.01,
-                radius: 16,
-                x: 0,
-                y: 0,
-                vx: 0,
-                vy: 0,
-            };
-
-            document.getElementById("speedSlider").addEventListener("input", (e) => {
-                comet.speed = parseFloat(e.target.value);
+        <script type="module" src="game.js"></script>
+        <script type="module">
+            window.addEventListener("load", () => {
+                window.initGame();
             });
-            document.getElementById("distanceSlider").addEventListener("input", (e) => {
-                comet.orbitRadius = parseFloat(e.target.value);
-            });
-
-            const particles = [];
-            class Particle {
-                constructor(x, y, baseVx, baseVy, orbitRadius) {
-                    this.x = x - Math.random() * 3;
-                    this.y = y - Math.random() * 3;
-                    this.size = getRandomArbitrary(0.1, 3);
-                    let boostFactor = 1 - (orbitRadius - minOrbit) / (maxOrbit - minOrbit);
-                    let extraBoost = boostMax * boostFactor;
-                    let dx = comet.x - sun.x,
-                        dy = comet.y - sun.y,
-                        d = Math.hypot(dx, dy);
-                    let extraVx = d ? extraBoost * ((sun.x - comet.x) / d) : 0;
-                    let extraVy = d ? extraBoost * ((sun.y - comet.y) / d) : 0;
-                    this.vx = baseVx + (Math.random() - 0.5) * 0.5 + extraVx;
-                    this.vy = baseVy + (Math.random() - 0.5) * 0.5 + extraVy;
-                    this.vx *= -1;
-                    this.vy *= -1;
-                    let decayFactor = 1 + (orbitRadius - minOrbit) / (maxOrbit - minOrbit);
-                    this.decay = (0.003 + Math.random() * 0.07) * decayFactor;
-                    this.life = 1;
-                    let factor = Math.random();
-                    let r = Math.floor(255 - 120 * factor);
-                    let g = Math.floor(255 - 120 * factor);
-                    let b = 255;
-                    this.color = `rgba(${r},${g},${b},`;
-                }
-                update() {
-                    this.x += this.vx;
-                    this.y += this.vy;
-                    this.life -= this.decay;
-                }
-            }
-
-            function getRandomArbitrary(min, max) {
-                return Math.random() * (max - min) + min;
-            }
-
-            function update(dt) {
-                comet.angle += comet.speed * dt;
-                comet.x = sun.x + comet.orbitRadius * Math.cos(comet.angle);
-                comet.y = sun.y + comet.orbitRadius * Math.sin(comet.angle);
-                comet.vx = -comet.orbitRadius * comet.speed * Math.sin(comet.angle);
-                comet.vy = comet.orbitRadius * comet.speed * Math.cos(comet.angle);
-                for (let i = 0; i < 2; i++) {
-                    particles.push(new Particle(comet.x, comet.y, comet.vx, comet.vy, comet.orbitRadius));
-                }
-                
-                for (let i = particles.length - 1; i >= 0; i--) {
-                    particles[i].update();
-                    if (particles[i].life <= 0) particles.splice(i, 1);
-                }
-            }
-
-            function drawSun() {
-                const grad = ctx.createRadialGradient(sun.x, sun.y, sun.radius * 0.1, sun.x, sun.y, sun.radius);
-                grad.addColorStop(0, "yellow");
-                grad.addColorStop(0.5, "orange");
-                grad.addColorStop(1, "rgba(255,69,0,0)");
-                ctx.fillStyle = grad;
-                ctx.beginPath();
-                ctx.arc(sun.x, sun.y, sun.radius, 0, Math.PI * 2);
-                ctx.fill();
-            }
-
-            function drawComet() {
-                ctx.save();
-                ctx.shadowBlur = 20;
-                ctx.shadowColor = "white";
-                ctx.fillStyle = "white";
-                ctx.beginPath();
-                ctx.arc(comet.x, comet.y, comet.radius, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.restore();
-            }
-
-            function drawParticles() {
-                particles.forEach((p) => {
-                    ctx.fillStyle = p.color + p.life + ")";
-                    ctx.beginPath();
-                    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-                    ctx.fill();
-                });
-            }
-
-            function draw() {
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                drawSun();
-                drawParticles();
-                drawComet();
-            }
-
-            let lastTime = null;
-            function loop(timestamp) {
-                if (!lastTime) lastTime = timestamp;
-                const dt = (timestamp - lastTime) / 16.67;
-                lastTime = timestamp;
-                update(dt);
-                draw();
-                requestAnimationFrame(loop);
-            }
-            requestAnimationFrame(loop);
         </script>
     </body>
 </html>
